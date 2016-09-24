@@ -1,0 +1,41 @@
+CC=mipsel-unknown-linux-gnu-gcc
+STRIP=mipsel-unknown-linux-gnu-strip --strip-all
+
+COPT=-O3 -DHWRANDOM=\"/dev/urandom\"
+CFLAGS=-Wall $(COPT) -pipe -funroll-loops -I/opt/mipsel/include
+LDFLAGS=-L/opt/mipsel/lib \
+	-Wl,-rpath-link,/opt/toolchain/mipsel/mipsel-unknown-linux-gnu/lib \
+	-Wl,-rpath-link,/opt/mipsel/lib
+LIBS=-lm -lgmp
+
+PREFIX=/usr
+BINDIR=$(PREFIX)/bin
+LIBDIR=$(PREFIX)/lib
+INCLUDEDIR=$(PREFIX)/include
+SHAREDIR=$(PREFIX)/share
+MANDIR=$(SHAREDIR)/man
+INFODIR=$(SHAREDIR)/info
+
+STATIC_SRC=gmpbbs.c main.c
+LIBOBJ=gmpbbs.o
+OBJ=main.o
+
+all: libgmpbbs.so gmpbbs gmpbbs-static
+
+gmpbbs-static:
+	$(CC) $(CFLAGS) -o $@ $(STATIC_SRC) $(LDFLAGS) $(LIBS)
+	$(STRIP) $@
+
+gmpbbs: libgmpbbs.so $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) -L./ $(LDFLAGS) $(LIBS) -lgmpbbs
+	$(STRIP) $@
+
+$(LIBOBJ):
+	$(CC) -c $(CFLAGS) -fPIC $(@:.o=.c)
+
+libgmpbbs.so: $(LIBOBJ)
+	$(CC) $(CFLAGS) -o $@ $(LIBOBJ) $(LDFLAGS) -shared $(LIBS)
+	$(STRIP) $@
+
+clean:
+	rm -rf *~ *.o libgmpbbs.so gmpbbs{,-static}

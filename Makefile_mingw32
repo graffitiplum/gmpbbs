@@ -1,0 +1,45 @@
+CC=mingw32-gcc
+AR=mingw32-ar
+RANLIB=mingw32-ranlib
+
+ARCH=i686
+ARCHOPT=-mmmx
+MINGWINC=-I/opt/mingw32/$(ARCH)/include
+MINGWLIB=-L/opt/mingw32/$(ARCH)/lib
+
+COPT=-O3 -march=$(ARCH) $(ARCHOPT) $(MINGWINC)
+CFLAGS=-Wall $(COPT) -pipe -funroll-loops
+LDFLAGS=$(MINGWLIB)
+LIBS=-lm -lgmp -ladvapi32
+
+PREFIX=/opt/mingw32/$(ARCH)
+BINDIR=$(PREFIX)/bin
+LIBDIR=$(PREFIX)/lib
+INCLUDEDIR=$(PREFIX)/include
+SHAREDIR=$(PREFIX)/share
+MANDIR=$(SHAREDIR)/man
+INFODIR=$(SHAREDIR)/info
+
+LIBOBJ=gmpbbs.o
+OBJ=main.o
+
+all: libgmpbbs.a gmpbbs.exe
+
+gmpbbs.exe: $(OBJ)
+	$(CC) $(CFLAGS) -o gmpbbs.exe $(OBJ) $(LDFLAGS) libgmpbbs.a $(LIBS)
+
+libgmpbbs.a: $(LIBOBJ)
+	$(AR) cru $@ $(LIBOBJ) && \
+	$(RANLIB) $@
+
+install: gmpbbs.exe libgmpbbs.a
+	install -d $(BINDIR)
+	install -d $(LIBDIR)
+	install -d $(INCLUDEDIR)
+	install -m 0755 gmpbbs.exe $(BINDIR)/gmpbbs.exe
+	install -m 0644 gmpbbs.h $(INCLUDEDIR)/gmpbbs.h
+	install -m 0644 libgmpbbs.a $(LIBDIR)/libgmpbbs.a
+	$(RANLIB) $(LIBDIR)/libgmpbbs.a
+
+clean:
+	rm -f *~ *.o gmpbbs.exe libgmpbbs.a
